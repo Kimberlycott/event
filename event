@@ -1,0 +1,39 @@
+import discord
+from discord.ext import commands
+
+# Токен вашего бота Discord
+TOKEN = 'YOUR_DISCORD_BOT_TOKEN'
+
+# Префикс для активации команд бота
+PREFIX = '!'
+
+# Создаем экземпляр бота
+bot = commands.Bot(command_prefix=PREFIX)
+
+# Словарь для хранения ивентов и их ревардов
+events = {}
+
+@bot.event
+async def on_ready():
+    print(f'Бот {bot.user.name} готов к работе')
+
+# Команда для создания ивента и привязки к нему ревардов
+@bot.command()
+async def create_event(ctx, event_name: str, *rewards):
+    if event_name not in events:
+        events[event_name] = list(rewards)
+        await ctx.send(f'Ивент {event_name} успешно создан.')
+    else:
+        await ctx.send('Ивент с таким именем уже существует.')
+
+# Команда для просмотра списка ивентов и их ревардов
+@bot.command()
+async def list_events(ctx):
+    if not events:
+        await ctx.send('Список ивентов пуст.')
+    else:
+        event_list = '\n'.join([f'{event}: {", ".join(rewards)}' for event, rewards in events.items()])
+        await ctx.send(f'Список ивентов:\n{event_list}')
+
+# Запуск бота
+bot.run(TOKEN)
