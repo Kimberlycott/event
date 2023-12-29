@@ -1,0 +1,52 @@
+import discord
+from discord.ext import commands
+import requests
+
+# Токен вашего бота Discord
+TOKEN = 'YOUR_DISCORD_BOT_TOKEN'
+
+# Токен альфа бота (пример)
+ALPHA_BOT_TOKEN = 'ALPHA_BOT_API_TOKEN'
+
+# Префикс для активации команд бота
+PREFIX = '!'
+
+# Создаем экземпляр бота
+bot = commands.Bot(command_prefix=PREFIX)
+
+# Словарь для хранения ивентов и их ревардов
+events = {}
+
+# Функция для создания ивента через альфа бота
+def create_event_through_alpha_bot(event_name, rewards):
+    url = f'https://alphabotapi.com/create_event'  # Пример URL API альфа бота для создания ивента
+    headers = {'Authorization': f'Bearer {ALPHA_BOT_TOKEN}'}
+    payload = {'event_name': event_name, 'rewards': rewards}
+    response = requests.post(url, headers=headers, json=payload)
+    return response.json()
+
+@bot.event
+async def on_ready():
+    print(f'Бот {bot.user.name} готов к работе')
+
+# Команда для создания ивента и привязки к нему ревардов
+@bot.command()
+async def create_event(ctx, event_name: str, *rewards):
+    if event_name not in events:
+        events[event_name] = list(rewards)
+        response = create_event_through_alpha_bot(event_name, list(rewards))
+        await ctx.send(f'Ивент {event_name} успешно создан через альфа бота.')
+    else:
+        await ctx.send('Ивент с таким именем уже существует.')
+
+# Команда для просмотра списка ивентов и их ревардов
+@bot.command()
+async def list_events(ctx):
+    if not events:
+        await ctx.send('Список ивентов пуст.')
+    else:
+        event_list = '\n'.join([f'{event}: {", ".join(rewards)}' for event, rewards in events.items()])
+        await ctx.send(f'Список ивентов:\n{event_list}')
+
+# Запуск бота
+bot.run(TOKEN)
